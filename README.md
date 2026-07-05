@@ -1,6 +1,6 @@
 # 🚀 Cretip: Decentralized Creator Tipping on Stellar
 
-**Cretip** is an open-source, decentralized tipping platform built on the Stellar blockchain. It empowers fans to send direct crypto payments (XLM, stablecoins) to their favorite creators in seconds, with zero intermediaries and minimal fees.
+**Cretip** is an open-source, decentralized tipping platform built on the Stellar blockchain. It empowers fans to send direct Stellar USDC payments to their favorite creators in seconds, with zero intermediaries and minimal fees.
 
 ## 🏗️ Architecture Overview
 
