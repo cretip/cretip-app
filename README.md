@@ -24,11 +24,10 @@ cretip-app/
 
 ## 🌐 Core Features
 
-- **Creator Profiles**: Public profiles with wallet addresses and bios
-- **Direct Tipping**: Send XLM or testnet stablecoins instantly
-- **Tip History**: Real-time feed of recent tips received
-- **Wallet Integration**: Mock wallet signing for local prototyping
-- **Dark Cyber-Neon UI**: Premium, high-converting design aesthetic
+* **👑 Creator Profiles:** Public profiles displaying custom bios, links, and public wallet addresses.
+* **💸 Direct Tipping:** Send Stellar USDC tokens directly to creators with near-zero network fees.
+* **🕒 Tip History:** A real-time chronological feed of recent verified on-chain tips received.
+* **💳 Wallet Integration:** Browser-injected Freighter Wallet authentication for direct transaction signing.
 
 ## 🚀 Getting Started
 
