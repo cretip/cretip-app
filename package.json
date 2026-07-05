@@ -1,0 +1,19 @@
+{
+  "name": "cretip-app",
+  "version": "0.1.0",
+  "description": "Decentralized creator tipping platform on Stellar blockchain",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix frontend\"",
+    "lint": "npm run lint --prefix backend && npm run lint --prefix frontend",
+    "setup": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "clean": "rm -rf backend/node_modules frontend/node_modules && npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": ["stellar", "crypto", "tipping", "blockchain", "web3"],
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.1"
+  }
+}

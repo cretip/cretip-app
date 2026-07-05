@@ -1,0 +1,23 @@
+{
+  "name": "cretip-backend",
+  "version": "1.0.0",
+  "description": "Cretip backend API for creator profiles and tip history",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "lint": "eslint src --fix"
+  },
+  "keywords": ["stellar", "crypto", "tipping", "blockchain"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.45.0"
+  }
+}
