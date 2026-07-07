@@ -193,11 +193,11 @@ soroban contract build
 
 **Arguments:**
 - `env`: Soroban Environment
-- `shares`: Amount (in stroops, 1 XLM = 10^7 stroops)
+- `shares`: Amount of Stellar USDC tokens to transfer (as an integer, using the token's decimal precision)
 - `creator_address`: Stellar wallet address (Address type)
 
 **Logic:**
-- Safely transfers native assets from caller to creator
+- Safely transfers Stellar USDC tokens from caller to creator
 - Validates recipient address
 - Returns transaction result or error
 
