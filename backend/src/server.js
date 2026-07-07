@@ -5,6 +5,23 @@ import { v4 as uuidv4 } from 'uuid';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Stellar public key: starts with 'G', followed by exactly 55 uppercase alphanumeric chars (base32)
+const STELLAR_ADDRESS_REGEX = /^G[A-Z0-9]{55}$/;
+
+/**
+ * Validates a Stellar public key string.
+ * Returns an error message string if invalid, or null if valid.
+ */
+const validateStellarAddress = (address) => {
+  if (!address || typeof address !== 'string') {
+    return 'Stellar wallet address is required and must be a string.';
+  }
+  if (!STELLAR_ADDRESS_REGEX.test(address)) {
+    return 'Invalid Stellar wallet address. Must start with "G" and be exactly 56 uppercase alphanumeric characters.';
+  }
+  return null;
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -115,23 +132,31 @@ app.post('/api/user/activate-creator', (req, res) => {
   const { user_id, url_slug, display_name, bio, stellar_wallet_address, social_links, category } = req.body;
 
   if (!user_id) {
-    return res.status(400).json({ error: 'User ID required' });
+    return res.status(400).json({ errors: ['User ID required'] });
   }
 
   const user = findUserById(user_id);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ errors: ['User not found'] });
   }
 
   if (!url_slug || !display_name) {
-    return res.status(400).json({ error: 'URL slug and display name required' });
+    return res.status(400).json({ errors: ['URL slug and display name required'] });
   }
 
   // Check if slug is already taken
   const slugExists = users.some(u => u.creator_profile?.url_slug === url_slug && u.id !== user_id);
   if (slugExists) {
-    return res.status(400).json({ error: 'URL slug already taken' });
+    return res.status(400).json({ errors: ['URL slug already taken'] });
+  }
+
+  // Validate Stellar wallet address when provided
+  if (stellar_wallet_address) {
+    const walletError = validateStellarAddress(stellar_wallet_address);
+    if (walletError) {
+      return res.status(400).json({ errors: [walletError] });
+    }
   }
 
   user.is_creator = true;
@@ -180,18 +205,19 @@ app.post('/api/user/update-wallet', (req, res) => {
   const { user_id, stellar_wallet_address } = req.body;
 
   if (!user_id || !stellar_wallet_address) {
-    return res.status(400).json({ error: 'User ID and wallet address required' });
+    return res.status(400).json({ errors: ['User ID and wallet address required'] });
   }
 
   const user = findUserById(user_id);
 
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(404).json({ errors: ['User not found'] });
   }
 
-  // Validate Stellar wallet address format (basic check)
-  if (!stellar_wallet_address.startsWith('G') || stellar_wallet_address.length !== 56) {
-    return res.status(400).json({ error: 'Invalid Stellar wallet address' });
+  // Validate Stellar wallet address format using canonical regex
+  const walletError = validateStellarAddress(stellar_wallet_address);
+  if (walletError) {
+    return res.status(400).json({ errors: [walletError] });
   }
 
   user.stellar_wallet_address = stellar_wallet_address;

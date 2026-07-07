@@ -79,7 +79,12 @@ export function AuthProvider({ children }) {
       localStorage.setItem('user', JSON.stringify(updatedUser));
       return updatedUser;
     } catch (error) {
-      throw error.response?.data?.error || 'Failed to activate creator profile';
+      const data = error.response?.data;
+      // Support both { errors: [...] } array payloads and legacy { error: '...' } strings
+      if (data?.errors && Array.isArray(data.errors)) {
+        throw data.errors.join(' ');
+      }
+      throw data?.error || 'Failed to activate creator profile';
     }
   };
 
