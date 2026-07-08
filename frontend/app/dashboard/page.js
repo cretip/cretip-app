@@ -10,6 +10,7 @@ import CreatorActivationForm from '@/components/CreatorActivationForm';
 import QuickTipModal from '@/components/QuickTipModal';
 import LinkWalletSection from '@/components/LinkWalletSection';
 import ConnectWalletButton from '@/components/ConnectWalletButton';
+import CopyProfileLink from '@/components/CopyProfileLink';
 
 const API_BASE = 'http://localhost:3001/api';
 
@@ -304,9 +305,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 dark:text-gray-400 uppercase">Profile URL</p>
-                    <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                      cretip.app/{user.creator_profile?.url_slug}
-                    </p>
+                    <CopyProfileLink urlSlug={user.creator_profile?.url_slug} />
                   </div>
                   <div>
                     <p className="text-xs text-gray-600 dark:text-gray-400 uppercase">Category</p>
