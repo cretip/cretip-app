@@ -3,11 +3,12 @@
 import './globals.css';
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { WalletProvider } from '@/context/WalletContext';
+import { WalletProvider, useWallet } from '@/context/WalletContext';
 import AuthModal from '@/components/AuthModal';
 
 function HeaderContent() {
   const { user, logout } = useAuth();
+  const { disconnectWallet } = useWallet();
   const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -22,6 +23,11 @@ function HeaderContent() {
       document.documentElement.classList.add('dark');
     }
   }, []);
+
+  const handleLogout = () => {
+    disconnectWallet();
+    logout();
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -61,7 +67,7 @@ function HeaderContent() {
                 {user.username}
               </span>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
               >
                 Logout

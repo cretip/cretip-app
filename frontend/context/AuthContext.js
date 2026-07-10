@@ -18,10 +18,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Don't restore user from localStorage - start fresh
-    setLoading(false);
+    // Restore user from localStorage on mount
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (error) {
+      console.error('Failed to restore user from localStorage:', error);
+    } finally {
+      setLoading(false);
+    }
 
-    // Listen for storage changes from other components
+    // Listen for storage changes from other tabs
     const handleStorageChange = (e) => {
       if (e.key === 'user') {
         const updatedUser = e.newValue ? JSON.parse(e.newValue) : null;
