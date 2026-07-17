@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '@/context/AuthContext';
 
 const API_BASE = 'http://localhost:3001/api';
 
 const TipCreatorModal = ({ isOpen, onClose, userId }) => {
+  const { user } = useAuth();
   const [creators, setCreators] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [selectedCreator, setSelectedCreator] = useState(null);
@@ -28,7 +30,7 @@ const TipCreatorModal = ({ isOpen, onClose, userId }) => {
   const fetchCreators = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/health`);
+      await axios.get(`${API_BASE}/health`);
       
       // Get all creators from the system
       // For now, we'll use mock data since we need an endpoint that lists all creators
@@ -59,12 +61,19 @@ const TipCreatorModal = ({ isOpen, onClose, userId }) => {
       return;
     }
 
+    // Validate balance before submission
+    const userBalance = user?.balance || 0;
+    if (amount > userBalance) {
+      setError(`⚠ Insufficient balance. You have ${userBalance.toFixed(2)} USDC, but are trying to send ${amount.toFixed(2)} USDC`);
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      const mockTxHash = `tip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const mockTxHash = `tip_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
       await axios.post(`${API_BASE}/tips`, {
         tx_hash: mockTxHash,
@@ -225,6 +234,25 @@ const TipCreatorModal = ({ isOpen, onClose, userId }) => {
               />
             </div>
 
+            {/* Balance Display and Warning */}
+            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Your Balance</p>
+                <p className="font-semibold text-gray-900 dark:text-white">{(user?.balance || 0).toFixed(2)} USDC</p>
+              </div>
+              {(selectedPreset || tipAmount) && (
+                <div className={`text-sm font-semibold ${
+                  (selectedPreset || parseFloat(tipAmount)) > (user?.balance || 0)
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-green-600 dark:text-green-400'
+                }`}>
+                  {(selectedPreset || parseFloat(tipAmount)) > (user?.balance || 0)
+                    ? `⚠ Insufficient balance`
+                    : `✓ Sufficient balance`}
+                </div>
+              )}
+            </div>
+
             {error && (
               <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm">
                 {error}
@@ -240,8 +268,8 @@ const TipCreatorModal = ({ isOpen, onClose, userId }) => {
             <div className="flex gap-3 pt-4">
               <button
                 type="submit"
-                disabled={loading}
-                className="btn-success flex-1"
+                disabled={loading || (selectedPreset || parseFloat(tipAmount || 0)) > (user?.balance || 0)}
+                className="btn-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending...' : 'Send Tip'}
               </button>

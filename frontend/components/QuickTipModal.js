@@ -74,6 +74,25 @@ export default function QuickTipModal({ isOpen, creator, userBalance, onClose, o
                 min="0"
                 autoFocus
               />
+              
+              {/* Balance Display and Warning */}
+              <div className="mt-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Your Balance</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">${userBalance.toFixed(2)} USDC</p>
+                </div>
+                {tipAmount && (
+                  <p className={`text-xs font-semibold ${
+                    parseFloat(tipAmount) > userBalance
+                      ? 'text-red-600 dark:text-red-400'
+                      : 'text-green-600 dark:text-green-400'
+                  }`}>
+                    {parseFloat(tipAmount) > userBalance
+                      ? `⚠ Insufficient balance`
+                      : `✓ Sufficient balance`}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Feedback */}
@@ -101,7 +120,7 @@ export default function QuickTipModal({ isOpen, creator, userBalance, onClose, o
               </button>
               <button
                 type="submit"
-                disabled={sending}
+                disabled={sending || parseFloat(tipAmount || 0) > userBalance}
                 className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
               >
                 {sending ? 'Sending...' : 'Send Tip'}

@@ -155,6 +155,15 @@ export default function Dashboard() {
       return;
     }
 
+    // Validate balance before proceeding
+    if (parseFloat(tipAmount) > (user?.balance || 0)) {
+      setTipFeedback({ 
+        type: 'error', 
+        message: `⚠ Insufficient balance. You have ${(user?.balance || 0).toFixed(2)} USDC, but are trying to send ${parseFloat(tipAmount).toFixed(2)} USDC` 
+      });
+      return;
+    }
+
     if (!walletAddress) {
       setTipFeedback({ type: 'error', message: 'Please connect your Freighter wallet first' });
       return;
@@ -518,6 +527,25 @@ export default function Dashboard() {
                   min="0"
                   required
                 />
+                
+                {/* Balance Display and Warning */}
+                {tipAmount && (
+                  <div className="mt-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Your Balance</p>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">${(user?.balance || 0).toFixed(2)} USDC</p>
+                    </div>
+                    <p className={`text-xs font-semibold ${
+                      parseFloat(tipAmount) > (user?.balance || 0)
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-green-600 dark:text-green-400'
+                    }`}>
+                      {parseFloat(tipAmount) > (user?.balance || 0)
+                        ? `⚠ Insufficient balance`
+                        : `✓ Sufficient balance`}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Feedback Message */}
@@ -546,7 +574,7 @@ export default function Dashboard() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={sendingTip || !selectedCreator}
+                disabled={sendingTip || !selectedCreator || parseFloat(tipAmount || 0) > (user?.balance || 0)}
                 className="btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sendingTip ? 'Processing Transaction...' : 'Send Tip'}
@@ -583,7 +611,7 @@ export default function Dashboard() {
       <QuickTipModal
         isOpen={quickTipModal.isOpen}
         creator={quickTipModal.creator}
-        userBalance={0}
+        userBalance={user?.balance || 0}
         onClose={closeQuickTipModal}
         onSendTip={handleQuickTip}
       />
