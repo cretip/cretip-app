@@ -55,6 +55,14 @@ impl TipContract {
             creator_address
         );
 
+        // Publish a structured event so external listeners can track tip
+        // successes on the ledger. Topics register the event name, sender,
+        // and recipient; the amount is carried as the event data.
+        env.events().publish(
+            (Symbol::new(&env, "tip_creator"), invoker.clone(), creator_address.clone()),
+            shares,
+        );
+
         true
     }
 
