@@ -46,7 +46,18 @@ cretip-app/
 cd cretip-app
 ```
 
-#### 2. Backend Setup
+#### 2. Quick Start (recommended)
+
+Install dependencies for the root, backend, and frontend, then boot both the API and UI servers with a single command:
+
+```bash
+npm run setup
+npm run dev:all
+```
+
+The API server will start on `http://localhost:3001` and the Next.js dev server on `http://localhost:3000`.
+
+#### 3. Backend Setup (manual, alternative)
 
 ```bash
 cd backend
@@ -56,7 +67,7 @@ npm run dev
 
 The API server will start on `http://localhost:3001`
 
-#### 3. Frontend Setup
+#### 4. Frontend Setup (manual, alternative)
 
 ```bash
 cd ../frontend
@@ -66,7 +77,7 @@ npm run dev
 
 The Next.js dev server will start on `http://localhost:3000`
 
-#### 4. Smart Contract Setup
+#### 5. Smart Contract Setup
 
 ```bash
 cd ../contract
