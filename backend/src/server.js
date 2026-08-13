@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
+import { verifyStellarTransaction, isTransactionDuplicate, FALLBACK_MODE } from './stellar-verification.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -275,14 +276,21 @@ app.get('/api/creators/search', (req, res) => {
   res.json(results);
 });
 
-// POST /api/tips - Log a tip event with balance transfer
-app.post('/api/tips', (req, res) => {
+// POST /api/tips - Log a tip event with cryptographic verification
+app.post('/api/tips', async (req, res) => {
   const { tx_hash, amount, sender, creator_id, timestamp, currency } = req.body;
 
+  // Step 1: Validate required fields
   if (!tx_hash || !amount || !sender || !creator_id) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({ error: 'Missing required fields: tx_hash, amount, sender, creator_id' });
   }
 
+  // Step 2: Idempotency Check - Verify tx_hash hasn't been processed before
+  if (isTransactionDuplicate(tx_hash, tips)) {
+    return res.status(409).json({ error: 'Transaction already processed. Duplicate tx_hash detected.' });
+  }
+
+  // Step 3: Payload Validation - Verify sender and creator exist
   const senderUser = findUserById(sender);
   if (!senderUser) {
     return res.status(404).json({ error: 'Sender not found' });
@@ -290,12 +298,12 @@ app.post('/api/tips', (req, res) => {
 
   const creator = findUserById(creator_id);
   if (!creator || !creator.is_creator) {
-    return res.status(404).json({ error: 'Creator not found' });
+    return res.status(404).json({ error: 'Creator not found or is not a creator' });
   }
 
   const tipAmount = parseFloat(amount);
-  const tipCurrency = currency || 'USDC'; // Default to USDC
-  
+  const tipCurrency = currency || 'USDC';
+
   // Validate amount is positive
   if (tipAmount <= 0) {
     return res.status(400).json({ error: 'Tip amount must be greater than 0' });
@@ -303,10 +311,49 @@ app.post('/api/tips', (req, res) => {
 
   // Validate sender has sufficient balance
   if (senderUser.balance < tipAmount) {
-    return res.status(400).json({ error: `Insufficient balance. You have $${senderUser.balance.toFixed(2)}, but are trying to send $${tipAmount.toFixed(2)}` });
+    return res.status(400).json({
+      error: `Insufficient balance. You have ${senderUser.balance.toFixed(2)}, but are trying to send ${tipAmount.toFixed(2)}`,
+    });
   }
 
-  // Deduct from sender and credit to creator
+  // Step 4: On-Chain Verification (if creator has Stellar wallet)
+  if (creator.stellar_wallet_address && senderUser.stellar_wallet_address) {
+    try {
+      const verification = await verifyStellarTransaction(
+        tx_hash,
+        senderUser.stellar_wallet_address,
+        creator.stellar_wallet_address,
+        tipAmount
+      );
+
+      if (!verification.isValid) {
+        return res.status(400).json({
+          error: `Transaction verification failed: ${verification.error}`,
+          fallbackMode: FALLBACK_MODE,
+        });
+      }
+
+      if (verification.fallbackMode) {
+        console.log(`[Fallback Mode] Tip accepted without on-chain verification: ${tx_hash}`);
+      } else {
+        console.log(`[Verified] Stellar transaction confirmed: ${tx_hash}`);
+      }
+    } catch (verificationError) {
+      console.error('Critical verification error:', verificationError);
+      return res.status(500).json({
+        error: 'Transaction verification service unavailable',
+      });
+    }
+  } else {
+    // If no Stellar wallets linked, log and proceed (mock mode)
+    console.warn('[Mock Mode] Tip recorded without Stellar wallet verification', {
+      tx_hash,
+      hasCreatorWallet: !!creator.stellar_wallet_address,
+      hasSenderWallet: !!senderUser.stellar_wallet_address,
+    });
+  }
+
+  // Step 5: Process the tip - Deduct from sender and credit to creator
   senderUser.balance -= tipAmount;
   creator.balance += tipAmount;
 
@@ -318,6 +365,7 @@ app.post('/api/tips', (req, res) => {
     sender,
     creator_id,
     timestamp: timestamp || new Date().toISOString(),
+    verified: !FALLBACK_MODE && creator.stellar_wallet_address && senderUser.stellar_wallet_address,
   };
 
   tips.push(tip);
