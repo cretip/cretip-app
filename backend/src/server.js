@@ -2,9 +2,13 @@ import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyStellarTransaction, isTransactionDuplicate, FALLBACK_MODE } from './stellar-verification.js';
+import { SorobanIndexer } from './soroban-indexer.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Indexer instance
+let sorobanIndexer = null;
 
 // Stellar public key: starts with 'G', followed by exactly 55 uppercase alphanumeric chars (base32)
 const STELLAR_ADDRESS_REGEX = /^G[A-Z0-9]{55}$/;
@@ -402,7 +406,12 @@ app.get('/api/tips/received/:creator_id', (req, res) => {
 
 // GET /api/health
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'cretip-backend' });
+  const health = {
+    status: 'ok',
+    service: 'cretip-backend',
+    indexer: sorobanIndexer ? sorobanIndexer.getStats() : { status: 'disabled' },
+  };
+  res.json(health);
 });
 
 // Start server
@@ -412,4 +421,12 @@ app.listen(PORT, () => {
   console.log('\n📝 Pre-seeded Test Accounts:');
   console.log('  Creator: alice / password123');
   console.log('  Fan: bob / password123');
+
+  // Initialize and start Soroban Event Indexer
+  if (process.env.ENABLE_INDEXER !== 'false') {
+    sorobanIndexer = new SorobanIndexer(users, tips);
+    sorobanIndexer.start().catch(err => {
+      console.error('Failed to start indexer:', err);
+    });
+  }
 });
